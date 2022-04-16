@@ -17,6 +17,7 @@ enum e_player_data
 	bool:pSpawned,
 	pChar,
 	Float:pHealth,
+	bool:pClaimStarterpack
 };
 
 new PlayerData[MAX_PLAYERS][e_player_data];

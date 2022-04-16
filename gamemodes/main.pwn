@@ -11,16 +11,19 @@
 #include <YSI_Visual\y_commands>
 
 #include <easyDialog>
+#include <streamer>
 #include <skintags>
 #include <command-guess>
 #include <android-check>
 /** Module */
 #include "modules\server\config.inc"
 #include "modules\server\storage.inc"
+#include "modules\util\point.inc"
 #include "modules\util\macro.inc"
 #include "modules\util\variable.inc"
 #include "modules\core\player\player_accounts.inc"
 #include "modules\core\player\player_function.inc"
+#include "modules\core\player\player_command.inc"
 #include "modules\core\admin\admin.inc"
 
 forward OnGameModeInitEx();
@@ -36,6 +39,7 @@ public OnGameModeInit()
 
 public OnGameModeInitEx()
 {
+	LoadDynamicPoint();
     print("Gamemode successfully configurated.");
     return 1;
 }
@@ -68,9 +72,11 @@ public OnPlayerConnect(playerid)
 
 public OnPlayerDisconnect(playerid, reason)
 {
+	ResetVariable(playerid);
     MySQL_SaveDataPlayer(playerid);
     return 1;
 }
+
 
 public OnPlayerSpawn(playerid)
 {
@@ -89,31 +95,4 @@ public OnPlayerText(playerid, text[])
 {
 	SendNearbyMessage(playerid, 20.0, -1, "%s says: %s", GetName(playerid), text);
     return 0;
-}
-
-public e_COMMAND_ERRORS:OnPlayerCommandReceived(playerid, cmdtext[], e_COMMAND_ERRORS:success) 
-{
-    if(success == COMMAND_UNDEFINED)
-    {
-        new guessCmd[32],
-        dist = Command_Guess(guessCmd, cmdtext);
-
-        if (dist < 3)
-        {
-            SendErrorMessage(playerid, ""WHITE"Command \"%s\" is not found, did you mean \"%s\"?", cmdtext, guessCmd);
-        }
-        else
-        {
-            SendErrorMessage(playerid, ""WHITE"Command \"%s\" is not found", cmdtext);
-        }
-        return COMMAND_OK;
-    }
-    else if(!IsPlayerSpawned(playerid))
-    {
-        SendErrorMessage(playerid, "You are not spawned!");
-        Command_SetDeniedReturn(true);
-        return COMMAND_DENIED;
-    }
-
-    return COMMAND_OK;
 }

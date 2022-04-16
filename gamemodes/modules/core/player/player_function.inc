@@ -111,17 +111,13 @@ stock GetRandomFemaleSkin()
     return FemaleSkin;
 }
 
-stock ReturnName(playerid, underscore = 1)
+stock ReturnName(playerid)
 {
-    new
-        name[MAX_PLAYER_NAME + 1];
-
-    GetPlayerName(playerid, name, sizeof(name));
-
-    if(!underscore) {
-        for (new i = 0, len = strlen(name); i < len; i ++) {
-                if(name[i] == '_') name[i] = ' ';
-        }
+    new name[MAX_PLAYER_NAME];
+ 	GetPlayerName(playerid,name,sizeof(name));
+	for(new i = 0; i < MAX_PLAYER_NAME; i++)
+    {
+        if(name[i] == '_') name[i] = ' ';
     }
     return name;
 }

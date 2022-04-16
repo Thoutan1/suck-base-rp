@@ -22,7 +22,9 @@ stock MySQL_INIT()
 		printf("[ERROR] Error number: %d", mysql_errno(MySQL_Handle));
 		SendRconCommand("exit");
 		return 0;
-	} else {
+	} 
+	else 
+	{
         CallLocalFunction(#OnDatabaseConnected, "");
     }
     return 1;

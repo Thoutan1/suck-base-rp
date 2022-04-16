@@ -205,3 +205,9 @@ stock GetOriginNameFromID(lisitem, result[], maxlength = sizeof result)
 
 	strcopy(result, name, maxlength);
 }
+
+stock ResetVariable(playerid)
+{
+    UcpData[playerid][ucpAdmin] = 0;
+	PlayerData[playerid][pClaimStarterpack] = false;
+}

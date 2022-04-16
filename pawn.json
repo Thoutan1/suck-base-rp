@@ -8,6 +8,7 @@
 		"pBlueG/SA-MP-MySQL",
 		"Awsomedude/easyDialog",
 		"pawn-lang/YSI-Includes@5.x",
+		"samp-incognito/samp-streamer-plugin",
 		"Sreyas-Sreelal/samp-bcrypt:0.3.4",
 		"ff-agus44/android-check:1.2"
 	],
