@@ -1,4 +1,4 @@
-Dialog:DIALOG_REGISTER(playerid, response, listitem, inputtext[])
+function PageRegister(playerid, dialogid, response, listitem, inputtext[])
 {
     new str[256];
 
@@ -7,18 +7,19 @@ Dialog:DIALOG_REGISTER(playerid, response, listitem, inputtext[])
 
     format(str, sizeof(str), "Welcome to Roleplay Server!\n\nYour UCP: %s\nERROR: Password length cannot below 7 or above 32!\nPlease insert your Password below to register:", GetName(playerid));
     if(strlen(inputtext) < 7)
-        return Dialog_Show(playerid, DIALOG_REGISTER, DIALOG_STYLE_PASSWORD, "UCP - Register", str, "Register", "Exit");
+        return Dialog_ShowCallback(playerid, using public PageRegister<iiiis>, DIALOG_STYLE_PASSWORD, "UCP - Register", str, "Register", "Exit");
 
     if(strlen(inputtext) > 32)
-        return Dialog_Show(playerid, DIALOG_REGISTER, DIALOG_STYLE_PASSWORD, "UCP - Register", str, "Register", "Exit");
+        return Dialog_ShowCallback(playerid, using public PageRegister<iiiis>, DIALOG_STYLE_PASSWORD, "UCP - Register", str, "Register", "Exit");
           
     bcrypt_hash(playerid, "HashPlayerPassword", inputtext, BCRYPT_COST);
     return 1;
 }
 
-Dialog:DIALOG_LOGIN(playerid, response, listitem, inputtext[])
+function LoginPage(playerid, dialogid, response, listitem, const string:inputtext[])
 {
     new pwQuery[256], hash[BCRYPT_HASH_LENGTH];
+	
     if(!response)
 	    return Kick(playerid);
 	        
@@ -26,7 +27,7 @@ Dialog:DIALOG_LOGIN(playerid, response, listitem, inputtext[])
     {
 		new str[256];
         format(str, sizeof(str), "Welcome Back to Roleplay Server!\n\nYour UCP: %s\nPlease insert your Password below to logged in:", GetName(playerid));
-        Dialog_Show(playerid, DIALOG_LOGIN, DIALOG_STYLE_PASSWORD, "UCP - Login", str, "Login", "Exit");
+        Dialog_ShowCallback(playerid, using public LoginPage<iiiis>, DIALOG_STYLE_PASSWORD, "UCP - Login", str, "Login", "Exit");
         return 1;
 	}
 
@@ -39,7 +40,7 @@ Dialog:DIALOG_LOGIN(playerid, response, listitem, inputtext[])
     return 1;
 }
 
-Dialog:DIALOG_CHARLIST(playerid, response, listitem, inputtext[])
+function PageCharList(playerid, dialogid, response, listitem, inputtext[])
 {
     if(response)
 	{

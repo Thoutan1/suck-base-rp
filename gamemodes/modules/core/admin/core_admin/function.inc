@@ -52,7 +52,7 @@ stock GetPlayerAdminLevel(playerid)
 
 stock SetPlayerAdmin(playerid, level)
 {
-    PlayerData[playerid][pAdmin] = level;
+    UcpData[playerid][ucpAdmin] = level;
     return 1;
 }
 

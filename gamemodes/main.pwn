@@ -1,14 +1,19 @@
+#define CGEN_MEMORY   20000
 #define MAX_PLAYERS   1000
+#define YSI_YES_HEAP_MALLOC
 
 #include <a_samp>
 #include <a_mysql>
 #include <samp_bcrypt>
+#include <sscanf2>
+#include <strlib>
 
 #include <YSI_Coding\y_hooks>
 #include <YSI_Coding\y_va>
 #include <YSI_Data\y_iterate>
 #include <YSI_Server\y_colours>
 #include <YSI_Visual\y_commands>
+#include <YSI_Visual\y_dialog>
 
 #include <easyDialog>
 #include <streamer>
@@ -72,7 +77,7 @@ public OnPlayerConnect(playerid)
 
 public OnPlayerDisconnect(playerid, reason)
 {
-	ResetVariable(playerid);
+	ResetPlayerVariable(playerid);
     MySQL_SaveDataPlayer(playerid);
     return 1;
 }
@@ -95,4 +100,56 @@ public OnPlayerText(playerid, text[])
 {
 	SendNearbyMessage(playerid, 20.0, -1, "%s says: %s", GetName(playerid), text);
     return 0;
+}
+
+function OnQueryExecutedSuccesfully(playerid, E_QUERY_TYPE:query_type, race_check)
+{
+	if(!IsPlayerConnected(playerid))
+		return 0;
+
+	switch(query_type)
+	{
+		case QUERY_CHECK_ACCOUNT:
+		{
+			if(race_check != g_RaceCheck[playerid])
+                return Kick(playerid);
+
+			if(cache_num_rows())
+			{
+				cache_get_value_name(0, "UCP", tempUCP[playerid]);
+				cache_get_value_name_int(0, "ID", UcpData[playerid][ucpID]);
+				cache_get_value_name_int(0, "AdminLevel", UcpData[playerid][ucpAdmin]);
+
+				new str[252];
+				format(str, sizeof(str), ""WHITE"Welcome back "LIGHTGREEN"%s!"WHITE" You have "YELLOW"3 minutes "WHITE"to logged in.\nPlease input your "RED"password "WHITE"of this account.", GetName(playerid));
+				Dialog_ShowCallback(playerid, using public LoginPage<iiiis>, DIALOG_STYLE_PASSWORD, "Login - Page", str, "Login", "Exit");
+			}
+			else
+			{
+				Dialog_ShowCallback(playerid, using public PageRegister<iiiis>, DIALOG_STYLE_PASSWORD, "Page - Register", "Register", "Register", "Exit");
+			}
+		}
+
+		case QUERY_CREATE_ACCOUNT:
+		{
+			UcpData[playerid][ucpID] = cache_insert_id();
+			SendServerMessage(playerid, "Your account password have been generated successfully");
+			UcpData[playerid][ucpLogged] = true;
+			MySQL_CheckAccount(playerid);
+		}
+
+		case QUERY_LOAD_CHARACTER:
+		{
+			for (new i = 0; i < MAX_CHARS; i ++)
+			{
+				PlayerChar[playerid][i][0] = EOS;
+			}
+			for (new i = 0; i < cache_num_rows(); i ++)
+			{
+				cache_get_value_name(i, "Name", PlayerChar[playerid][i]);
+			}
+			ShowCharacterList(playerid);
+		}
+	}
+	return 1;
 }

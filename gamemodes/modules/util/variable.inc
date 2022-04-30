@@ -2,6 +2,13 @@ new g_RaceCheck[MAX_PLAYERS char];
 new PlayerChar[MAX_PLAYERS][MAX_CHARS][MAX_PLAYER_NAME + 1];
 new tempUCP[64];
 
+enum _:E_QUERY_TYPE
+{
+	QUERY_CHECK_ACCOUNT,
+	QUERY_CREATE_ACCOUNT,
+	QUERY_LOAD_CHARACTER
+}
+
 enum e_player_data
 {
 	pID,
@@ -25,7 +32,8 @@ new PlayerData[MAX_PLAYERS][e_player_data];
 enum e_ucp_data
 {
 	ucpID,
-	ucpAdmin
+	ucpAdmin,
+	bool:ucpLogged,
 }
 
 new UcpData[MAX_PLAYERS][e_ucp_data];

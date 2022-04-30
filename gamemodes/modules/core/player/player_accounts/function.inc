@@ -1,8 +1,8 @@
-stock CheckAccount(playerid)
+stock MySQL_CheckAccount(playerid)
 {
 	new query[256];
 	format(query, sizeof(query), "SELECT * FROM `PlayerUCP` WHERE `UCP` = '%s' LIMIT 1;", GetName(playerid));
-	mysql_tquery(MySQL_Handle, query, "CheckPlayerUCP", "d", playerid);
+	mysql_tquery(MySQL_Handle, query, #OnQueryExecutedSuccesfully, "ddd", playerid, QUERY_CHECK_ACCOUNT, g_RaceCheck[playerid]);
 	return 1;
 }
 
@@ -60,13 +60,6 @@ function MySQL_LoadCharacterData(playerid)
     return 1;
 }
 
-stock MySQL_LoadUcpData(playerid)
-{
-	cache_get_value_name_int(0, "ID", UcpData[playerid][ucpID]);
-	cache_get_value_name_int(0, "AdminLevel", UcpData[playerid][ucpAdmin]);
-	return 1;
-}
-
 function HashPlayerPassword(playerid, hashid)
 {
 	new
@@ -74,59 +67,42 @@ function HashPlayerPassword(playerid, hashid)
 		hash[BCRYPT_HASH_LENGTH];
 
     bcrypt_get_hash(hash, sizeof(hash));
-	GetPlayerName(playerid, tempUCP[playerid], MAX_PLAYER_NAME + 1);
-	format(query,sizeof(query),"INSERT INTO `PlayerUCP` (`UCP`, `Password`) VALUES ('%s', '%s')", tempUCP[playerid], hash);
-	mysql_tquery(MySQL_Handle, query);
-	UcpData[playerid][ucpID] = cache_insert_id();
-
-    SendServerMessage(playerid, "Your UCP is successfully registered!");
-    CheckAccount(playerid);
+	mysql_format(MySQL_Handle, query, sizeof(query), "INSERT INTO `PlayerUCP` (`UCP`, `Password`) VALUES ('%s', '%s')", tempUCP[playerid], hash);
+	mysql_tquery(MySQL_Handle, query, #OnQueryExecutedSuccesfully, "ddd", playerid, QUERY_CREATE_ACCOUNT, g_RaceCheck[playerid]);
 	return 1;
 }
 
 function OnPlayerPasswordChecked(playerid, bool:success)
-{
-	new str[256];
-    format(str, sizeof(str), "Welcome Back to Roleplay Server!\n\nYour UCP: %s\nPlease insert your Password below to logged in:", GetName(playerid));
-    
+{    
 	if(!success)
-        return Dialog_Show(playerid, DIALOG_LOGIN, DIALOG_STYLE_PASSWORD, "UCP - Login", str, "Login", "Exit");
+        return Dialog_ShowCallback(playerid, using public LoginPage<iiiis>, DIALOG_STYLE_PASSWORD, sprintf("UCP - Login", "Welcome Back to Roleplay Server!\n\nYour UCP: %s\nPlease insert your Password below to logged in:", GetName(playerid)), "Login", "Exit");
 		
-	new query[256], query2[256];
-	format(query, sizeof(query), "SELECT `Name` FROM `characters` WHERE `UCP` = '%s' LIMIT %d;", GetName(playerid), MAX_CHARS);
-	format(query2, sizeof(query2), "SELECT * FROM `playerucp` WHERE `UCP` = '%s'", GetName(playerid));
-	mysql_tquery(MySQL_Handle, query, "LoadCharacter", "d", playerid);
-	mysql_tquery(MySQL_Handle, query2, "LoadUCPData", "d", playerid);
+	MySQL_LoadCharacterList(playerid);
 	return 1;
 }
 
-stock ShowCharacterList(playerid)
+function MySQL_LoadCharacterList(playerid)
+{
+	new query[252];
+	mysql_format(MySQL_Handle, query, 188, "SELECT `Name` FROM `characters` WHERE `UCP` = '%s' LIMIT %d;", GetName(playerid), MAX_CHARS);
+	mysql_tquery(MySQL_Handle, query, #OnQueryExecutedSuccesfully, "ddd", playerid, QUERY_LOAD_CHARACTER, g_RaceCheck[playerid]);
+	return 1;
+}
+
+function ShowCharacterList(playerid)
 {
 	new name[256], count, sgstr[128];
 	for (new i; i < MAX_CHARS; i ++) if(PlayerChar[playerid][i][0] != EOS)
 	{
-	    format(sgstr, sizeof(sgstr), "%s\n", PlayerChar[playerid][i]);
+		format(sgstr, sizeof(sgstr), "%s\n", PlayerChar[playerid][i]);
 		strcat(name, sgstr);
 		count++;
 	}
 	if(count < MAX_CHARS)
 		strcat(name, "< Create Character >");
-	Dialog_Show(playerid, DIALOG_CHARLIST, DIALOG_STYLE_LIST, "Character List", name, "Select", "Quit");
-	return 1;
-}
 
-function LoadCharacter(playerid)
-{
-	for (new i = 0; i < MAX_CHARS; i ++)
-	{
-		PlayerChar[playerid][i][0] = EOS;
-	}
-	for (new i = 0; i < cache_num_rows(); i ++)
-	{
-		cache_get_value_name(i, "Name", PlayerChar[playerid][i]);
-	}
-  	ShowCharacterList(playerid);
-  	return 1;
+	Dialog_ShowCallback(playerid, using public PageCharList<iiiis>, DIALOG_STYLE_LIST, "Character List", name, "Select", "Quit");
+	return 1;
 }
 
 function PlayerCheck(playerid, rcc)
@@ -134,30 +110,10 @@ function PlayerCheck(playerid, rcc)
     if(rcc != g_RaceCheck{playerid})
 	    return Kick(playerid);
 	    
-	CheckAccount(playerid);
+	MySQL_CheckAccount(playerid);
 	return true;
 }
 
-function CheckPlayerUCP(playerid)
-{
-    new rows = cache_num_rows();
-	new str[256];
-	if (rows)
-	{
-	    cache_get_value_name(0, "UCP", tempUCP[playerid]);
-		cache_get_value_name_int(0, "ID", UcpData[playerid][ucpID]);
-		cache_get_value_name_int(0, "AdminLevel", UcpData[playerid][ucpAdmin]);
-
-	    format(str, sizeof(str), "Welcome Back to Roleplay Server!\n\nYour UCP: %s\nPlease insert your Password below to logged in:", GetName(playerid));
-		Dialog_Show(playerid, DIALOG_LOGIN, DIALOG_STYLE_PASSWORD, "UCP - Login", str, "Login", "Exit");
-	}
-	else
-	{
-	    format(str, sizeof(str), "Welcome to Roleplay Server!\n\nYour UCP: %s\nPlease insert your Password below to register:", GetName(playerid));
-		Dialog_Show(playerid, DIALOG_REGISTER, DIALOG_STYLE_PASSWORD, "UCP - Register", str, "Register", "Exit");
-	}
-	return 1;
-}
 
 function InsertPlayerName(playerid, name[])
 {
@@ -206,8 +162,8 @@ stock GetOriginNameFromID(lisitem, result[], maxlength = sizeof result)
 	strcopy(result, name, maxlength);
 }
 
-stock ResetVariable(playerid)
+stock ResetPlayerVariable(playerid)
 {
     UcpData[playerid][ucpAdmin] = 0;
-	PlayerData[playerid][pClaimStarterpack] = false;
+	UcpData[playerid][ucpLogged] = false;
 }
